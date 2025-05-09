@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Керування системою</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-4 sm:p-6">
+        <h1 class="text-2xl font-semibold text-blue-600 text-center mb-4 sm:mb-6">Пульт керування системою</h1>
+
+        <div class="mb-4">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Режим роботи</h2>
+            <div class="flex space-x-2 sm:space-x-4 justify-center">
+                <button id="mode-manual" class="mode-button bg-gray-300 hover:bg-blue-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Ручний</button>
+                <button id="mode-interval" class="mode-button bg-gray-300 hover:bg-blue-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Інтервальний</button>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Швидкість мотору</h2>
+            <input type="range" id="speed-control" min="0" max="99" value="20" class="w-full">
+            <p id="speed-value" class="text-center text-gray-600 text-sm sm:text-base">20</p>
+        </div>
+
+        <div class="mb-4">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Напрямок руху</h2>
+             <div class="flex space-x-2 sm:space-x-4 justify-center">
+                <button id="direction-forward" class="direction-button bg-gray-300 hover:bg-green-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Вперед</button>
+                <button id="direction-backward" class="direction-button bg-gray-300 hover:bg-red-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Назад</button>
+            </div>
+        </div>
+
+        <div class="mb-4" id="interval-settings" style="display: none;">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Налаштування інтервального режиму</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="move-time" class="block text-gray-700 text-sm font-bold mb-2">Час руху (мс)</label>
+                    <input type="number" id="move-time" value="5000" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm sm:text-base">
+                </div>
+                <div>
+                    <label for="stop-time" class="block text-gray-700 text-sm font-bold mb-2">Час зупинки (мс)</label>
+                    <input type="number" id="stop-time" value="2000" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-sm sm:text-base">
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Керування</h2>
+            <div class="flex space-x-2 sm:space-x-4 justify-center">
+                <button id="control-start" class="control-button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Почати рух</button>
+                <button id="control-stop" class="control-button bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Зупинити рух</button>
+            </div>
+        </div>
+         <div class="mb-4">
+            <h2 class="text-lg font-medium text-gray-700 mb-2">Режим роботи</h2>
+            <div class="flex space-x-2 sm:space-x-4 justify-center">
+                <button id="constant-on" class="constant-button bg-gray-300 hover:bg-green-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Постійний рух</button>
+                <button id="constant-off" class="constant-button bg-gray-300 hover:bg-red-500 text-gray-700 hover:text-white font-bold py-2 px-3 sm:py-2 sm:px-4 rounded-full focus:outline-none focus:shadow-outline text-sm sm:text-base">Рух при натисканні</button>
+            </div>
+        </div>
+
+        <p id="feedback" class="mt-6 text-gray-800 text-center text-sm sm:text-base">Очікування на команду...</p>
+    </div>
+
+    <script>
+        const modeButtons = document.querySelectorAll('.mode-button');
+        const speedControl = document.getElementById('speed-control');
+        const speedValueDisplay = document.getElementById('speed-value');
+        const directionButtons = document.querySelectorAll('.direction-button');
+        const intervalSettings = document.getElementById('interval-settings');
+        const controlButtons = document.querySelectorAll('.control-button');
+        const feedback = document.getElementById('feedback');
+        const constantButtons = document.querySelectorAll('.constant-button');
+
+        let selectedMode = 'manual';
+        let selectedDirection = 'forward';
+        let constantMode = 'off';
+
+        modeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modeButtons.forEach(b => b.classList.remove('bg-blue-500', 'text-white'));
+                modeButtons.forEach(b => b.classList.add('bg-gray-300', 'text-gray-700'));
+                this.classList.remove('bg-gray-300', 'text-gray-700');
+                this.classList.add('bg-blue-500', 'text-white');
+                selectedMode = this.id.split('-')[1];
+
+                if (selectedMode === 'interval') {
+                    intervalSettings.style.display = 'block';
+                } else {
+                    intervalSettings.style.display = 'none';
+                }
+                 feedback.textContent = `Режим: ${selectedMode}`;
+            });
+        });
+
+        directionButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                directionButtons.forEach(b => b.classList.remove('bg-green-500', 'bg-red-500', 'text-white'));
+                directionButtons.forEach(b => b.classList.add('bg-gray-300', 'text-gray-700'));
+                this.classList.remove('bg-gray-300', 'text-gray-700');
+                this.classList.add(this.id.includes('forward') ? 'bg-green-500' : 'bg-red-500', 'text-white');
+                selectedDirection = this.id.split('-')[1];
+                feedback.textContent = `Напрямок: ${selectedDirection}`;
+            });
+        });
+
+        constantButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                constantButtons.forEach(b => b.classList.remove('bg-green-500', 'bg-red-500', 'text-white'));
+                constantButtons.forEach(b => b.classList.add('bg-gray-300', 'text-gray-700'));
+                this.classList.remove('bg-gray-300', 'text-gray-700');
+                this.classList.add(this.id.includes('on') ? 'bg-green-500' : 'bg-red-500', 'text-white');
+                constantMode = this.id.split('-')[1];
+                feedback.textContent = `Постійний рух: ${constantMode}`;
+            });
+        });
+
+        speedControl.addEventListener('input', function() {
+            speedValueDisplay.textContent = this.value;
+             feedback.textContent = `Швидкість: ${this.value}`;
+        });
+
+        controlButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                feedback.textContent = `Команда: ${this.textContent}`;
+            });
+        });
+
+        document.getElementById('mode-manual').click();
+        document.getElementById('direction-forward').click();
+        document.getElementById('constant-on').click();
+    </script>
+</body>
+</html>
